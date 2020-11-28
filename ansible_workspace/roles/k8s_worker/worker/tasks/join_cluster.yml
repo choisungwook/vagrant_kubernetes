@@ -1,0 +1,6 @@
+---
+- name: Copy the join command to server location
+  copy: src=/home/vagrant/ansible_workspace/roles/k8s_master/join-command dest=/join-command.sh mode=0755
+
+- name: Join the node to cluster
+  command: sh /join-command.sh

@@ -1,0 +1,10 @@
+---
+- name: install k8s(kubelet, kubeadm, kubectl)
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_excludes: 'kubernetes'
+  with_items:
+  - kubelet
+  - kubeadm
+  - kubectl
