@@ -69,5 +69,9 @@ Vagrant.configure("2") do |config|
     cfg.vm.provision "file", source: "./ansible_workspace", destination: "ansible_workspace"
     cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/add_hosts.yaml", privileged: false
     cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/configure_ssh.yaml -i /home/vagrant/hosts", privileged: false
+
+    # run k8s-master role                               
+    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
+
   end
 end
