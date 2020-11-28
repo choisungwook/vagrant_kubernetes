@@ -10,7 +10,7 @@
     --apiserver-advertise-address="{{ ansible_host }}" 
     --apiserver-cert-extra-sans="{{ ansible_host }}" 
     --node-name "{{ master_name }}" 
-    --pod-network-cidr=192.168.0.0/16
+    --pod-network-cidr=172.16.0.0/16
   register: kubeadmin_init
   when: not kubernetes_init_stat.stat.exists
 
