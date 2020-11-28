@@ -10,5 +10,4 @@ kubernetes_yum_gpg_key:
 calico_url: "https://docs.projectcalico.org/v3.9/manifests/calico.yaml"
 
 # node_ip
-master_ip: "172.16.10.200"
 master_name: "master1"

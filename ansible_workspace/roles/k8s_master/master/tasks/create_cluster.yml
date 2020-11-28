@@ -7,8 +7,8 @@
 - name: Initialize the Kubernetes cluster using kubeadm
   command: > 
     kubeadm init 
-    --apiserver-advertise-address="{{ master_ip }}" 
-    --apiserver-cert-extra-sans="{{ master_ip }}" 
+    --apiserver-advertise-address="{{ ansible_host }}" 
+    --apiserver-cert-extra-sans="{{ ansible_host }}" 
     --node-name "{{ master_name }}" 
     --pod-network-cidr=192.168.0.0/16
   register: kubeadmin_init
