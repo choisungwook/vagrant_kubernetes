@@ -26,17 +26,21 @@
   - mkdir -p /home/vagrant/.kube
   - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
   - chown vagrant:vagrant /home/vagrant/.kube/config
+  when: not kubernetes_init_stat.stat.exists
 
 - name: Install calico pod network
   become: false
   retries: 3
   delay: 3
   command: kubectl apply -f "{{ calico_url }}"
+  when: not kubernetes_init_stat.stat.exists
 
 - name: Generate join command
   command: kubeadm token create --print-join-command
   register: join_command
+  when: not kubernetes_init_stat.stat.exists
 
 - name: Copy join command to local file
   become: false
   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+  when: not kubernetes_init_stat.stat.exists
