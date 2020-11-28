@@ -26,23 +26,23 @@ Vagrant.configure("2") do |config|
   end
 
   # worker node
-  # (1..N).each do |i|
-  #   config.vm.define "client-#{i}" do |cfg|
-  #     cfg.vm.box = IMAGE_NAME
-  #     cfg.vm.network "private_network", ip: K8SWORKER_IP + "#{i+10}", virtualbox__intnet: INET
-  #     cfg.vm.hostname = "client-#{i}"
+  (1..N).each do |i|
+    config.vm.define "client-#{i}" do |cfg|
+      cfg.vm.box = IMAGE_NAME
+      cfg.vm.network "private_network", ip: K8SWORKER_IP + "#{i+10}", virtualbox__intnet: INET
+      cfg.vm.hostname = "client-#{i}"
       
-  #     cfg.vm.provider "virtualbox" do |v|
-  #       v.memory = 4096
-  #       v.cpus = 2
-  #       v.name = "client#{i}"
-  #     end
-  #     cfg.vm.provision "shell", inline: <<-SCRIPT
-  #       sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-  #       systemctl restart sshd
-  #     SCRIPT
-  #   end
-  # end
+      cfg.vm.provider "virtualbox" do |v|
+        v.memory = 4096
+        v.cpus = 2
+        v.name = "client#{i}"
+      end
+      cfg.vm.provision "shell", inline: <<-SCRIPT
+        sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+      SCRIPT
+    end
+  end
 
 
   # ansible-server
