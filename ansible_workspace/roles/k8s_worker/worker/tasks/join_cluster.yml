@@ -1,6 +1,16 @@
 ---
+- name: Check if already joind
+  stat:
+    path: /etc/cni
+  register: kubernetes_init_stat
+
 - name: Copy the join command to server location
-  copy: src=/home/vagrant/ansible_workspace/roles/k8s_master/join-command dest=/join-command.sh mode=0755
+  copy: 
+    src: join-command
+    dest: /home/vagrant/join-command.sh
+    mode: 0755
+  when: not kubernetes_init_stat.stat.exists
 
 - name: Join the node to cluster
-  command: sh /join-command.sh
+  command: sh /home/vagrant/join-command.sh
+  when: not kubernetes_init_stat.stat.exists
