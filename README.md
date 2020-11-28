@@ -15,6 +15,22 @@ sudo systemctl daemon reload
 sudo systemctl restart kubelet
 ```
 
+# 대시보드 설치
+* 헬름 설치
+* 대시보드 설치
+```
+helm install stable/kubernetes-dashboard --generate-name
+```
+* 프록시
+```
+kubectl proxy --address='0.0.0.0' --port=8001 --accept-hosts='.*'
+```
+* 접속
+```
+http://[마스터IP]:8001/api/v1/namespaces/default/services/https:kubernetes-dashboard-1606573807:/proxy/
+```
+
+
 # 참고자료
 * [1] dashboard 설치 영상: https://youtu.be/6MnsSvChl1E
 * [2] install k8s playbooks role: https://github.com/geerlingguy/ansible-role-kubernetes/blob/master/tasks/main.yml
