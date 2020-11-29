@@ -1,0 +1,6 @@
+---
+- name: create dashboard
+  command: kubectl apply -f "{{ dashboard_url }}"
+
+- name: create service account
+  command: kubectl apply -f dashboard_serviceaccount.yml
