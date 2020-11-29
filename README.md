@@ -35,3 +35,4 @@ http://[마스터IP]:8001/api/v1/namespaces/default/services/https:kubernetes-da
 * [1] dashboard 설치 영상: https://youtu.be/6MnsSvChl1E
 * [2] install k8s playbooks role: https://github.com/geerlingguy/ansible-role-kubernetes/blob/master/tasks/main.yml
 * [3] dashboard 공식문서: https://kubernetes.io/ko/docs/tasks/access-application-cluster/web-ui-dashboard/
+* [4] dashboard 공식git: https://github.com/kubernetes/dashboard
