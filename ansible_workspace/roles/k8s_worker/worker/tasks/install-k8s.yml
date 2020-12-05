@@ -10,8 +10,8 @@
   - kubectl
   notify: restart kubelet
 
-# - name: Configure node ip
-#   lineinfile:
-#     create: yes
-#     path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
-#     line: Environment="KUBELET_EXTRA_ARGS=--node-ip={{ ansible_host }}"
+- name: change kubelet ip
+  replace:
+    path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '\$KUBELET_EXTRA_ARGS'
+    replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
