@@ -9,7 +9,7 @@
         dest: /home/vagrant/hosts
         content: |
           [master]
-          172.16.10.200
+          192.168.219.100
 
           [worker]
-          172.16.10.11
+          192.168.219.11
