@@ -1,0 +1,30 @@
+---
+- name: Add the epel-release
+  yum:
+    name: epel-release
+    state: latest
+    
+- name: Add the nfs-utils
+  yum:
+    name: nfs-utils
+    state: latest
+  notify:
+    - Enable nfsServer
+    - restart nfsServer
+    
+- name: Creates nfs shared directory
+  file:
+    path: /vagrant/home/nfs
+    state: directory
+    owner: nobody
+    group: nobody
+    mode: 0777
+
+- name: Insert nfs configuration
+  blockinfile:
+    path:  /etc/exports
+    block: |
+      /home/vagrant/nfs *(rw,sync,no_subtree_check,no_root_squash,no_all_squash,insecure)
+
+- name: apply nfs configuration
+  command: exportfs -rav

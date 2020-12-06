@@ -1,0 +1,30 @@
+---
+- name: copy nfs-role
+  copy:
+    src: role.yml
+    dest: /home/vagrant/nfs_role.yml
+
+- name: copy nfs-storageClass
+  copy:
+    src: storageClass.yml
+    dest: /home/vagrant/nfs_storageClass.yml
+
+- name: copy nfs-deployment
+  copy:
+    src: deployment.yml
+    dest: /home/vagrant/nfs_deployment.yml
+
+- name: kubectl apply nfs-role
+  command: kubectl apply -f /home/vagrant/nfs_role.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: kubectl apply nfs-storageClass
+  command: kubectl apply -f /home/vagrant/nfs_storageClass.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: kubectl apply nfs-deployment
+  command: kubectl apply -f /home/vagrant/nfs_deployment.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3

@@ -1,0 +1,8 @@
+---
+- name: Enable nfsServer
+  service:
+    name: nfs-server
+    enabled: yes
+
+- name: restart nfsServer
+  service: name=nfs-server state=restarted

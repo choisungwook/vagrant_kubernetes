@@ -2,6 +2,7 @@ IMAGE_NAME = "centos/7"
 N = 1
 ANSIBLE_SERVERIP = "192.168.219.200"
 K8SMASTER_IP = "192.168.219.100"
+NFS_IP = "192.168.219.201"
 K8SWORKER_IP = "192.168.219."
 
 Vagrant.configure("2") do |config|
@@ -43,6 +44,22 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  # nfs server
+  config.vm.define "nfs-server" do |cfg|
+    cfg.vm.box = IMAGE_NAME
+    cfg.vm.network "public_network", ip: NFS_IP
+    cfg.vm.hostname = "nfs-server"
+    
+    cfg.vm.provider "virtualbox" do |v|
+      v.memory = 2048
+      v.cpus = 2
+      v.name = "nfs-server"
+    end
+    cfg.vm.provision "shell", inline: <<-SCRIPT
+      sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+      systemctl restart sshd
+    SCRIPT
+  end
 
   # ansible-server
   config.vm.define "ansible-server4" do |cfg|
@@ -74,5 +91,11 @@ Vagrant.configure("2") do |config|
 
     # run k8s-worker role
     cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
+
+    # run k8s-nfs server role
+    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_nfs_server/site.yml -i /home/vagrant/hosts", privileged: false
+
+    # masterNode install nfs-storageclass
+    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_nfs_configuration/site.yml -i /home/vagrant/hosts", privileged: false
   end
 end
