@@ -19,6 +19,7 @@ volumes:
       path: /home/vagrant/nfs
 ```
 3. k8f_nfs_configuration/master/files/storage의 provisioner이름과 k8f_nfs_configuration/master/files/deployment.yml의 env PROVISIONER_NAME과 일치
+4. (설정수정) nfs 마운트 디렉터리: roles/k8s_nfs_server/nfsServer/tasks/main.yml, roles/k8s_nfs_configuration/master/files/deployment.yml 수정
 
 # 참고자료
 * [1] dashboard 설치 영상: https://youtu.be/6MnsSvChl1E

@@ -29,9 +29,9 @@ spec:
             - name: NFS_SERVER
               value: 192.168.219.201
             - name: NFS_PATH
-              value: /home/vagrant/nfs
+              value: /mnt/nfs
       volumes:
         - name: nfs-client-root
           nfs:
             server: 192.168.219.201
-            path: /home/vagrant/nfs
+            path: /mnt/nfs
