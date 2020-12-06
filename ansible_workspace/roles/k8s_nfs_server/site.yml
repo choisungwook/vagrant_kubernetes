@@ -2,6 +2,8 @@
 - name: Install k8s-master
   hosts: nfsServer
   remote_user: vagrant
+  become: yes
+  become_method: sudo
 
   roles:
     - nfsServer
