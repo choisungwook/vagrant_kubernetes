@@ -5,6 +5,11 @@
     name: epel-release
     state: latest
 
+- name: Add the epel-release
+  yum:
+    name: nfs-utils
+    state: latest
+
 - name: Install the git
   yum:
     name: git
