@@ -1,9 +1,13 @@
 IMAGE_NAME = "centos/7"
-N = 1
+N = 2
 INET = "kubernetes_network"
 ANSIBLE_SERVERIP = "172.16.10.240"
-K8SMASTER_IP = "172.16.10.200"
-K8SWORKER_IP = "172.16.10."
+K8SMASTER_IP = "172.16.25.200"
+K8SWORKER_IP = "172.16.25."
+MASTER_NODE_RAM = 8192
+MASTER_NODE_CPU = 4
+WORKER_NODE_RAM = 16384
+WORKER_NODE_CPU = 6
 
 Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
@@ -15,8 +19,8 @@ Vagrant.configure("2") do |config|
     cfg.vm.hostname = "k8s-master"
     
     cfg.vm.provider "virtualbox" do |v|
-      v.memory = 8192
-      v.cpus = 4
+      v.memory = MASTER_NODE_RAM
+      v.cpus = MASTER_NODE_CPU
       v.name = "k8s-master"
     end
     cfg.vm.provision "shell", inline: <<-SCRIPT
@@ -27,15 +31,15 @@ Vagrant.configure("2") do |config|
 
   # worker node
   (1..N).each do |i|
-    config.vm.define "client-#{i}" do |cfg|
+    config.vm.define "k8s-worekr-#{i}" do |cfg|
       cfg.vm.box = IMAGE_NAME
       cfg.vm.network "private_network", ip: K8SWORKER_IP + "#{i+10}", virtualbox__intnet: INET
-      cfg.vm.hostname = "client-#{i}"
+      cfg.vm.hostname = "k8s-worker-#{i}"
       
       cfg.vm.provider "virtualbox" do |v|
-        v.memory = 4096
-        v.cpus = 2
-        v.name = "client#{i}"
+        v.memory = WORKER_NODE_RAM
+        v.cpus = WORKER_NODE_CPU
+        v.name = "k8s-worker-#{i}"
       end
       cfg.vm.provision "shell", inline: <<-SCRIPT
         sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
