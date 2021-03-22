@@ -1,6 +1,5 @@
-# centos_kubernetes
-centos_kubernetes
-
+# 개요
+* centos에서 k8s 설치
 
 # 각 노드 IP 수동 설정
 * 제일 마지막줄에 --node-ip 추가
