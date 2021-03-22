@@ -1,6 +1,5 @@
 IMAGE_NAME = "centos/7"
 N = 2
-INET = "kubernetes_network"
 ANSIBLE_SERVERIP = "192.168.25.240"
 K8SMASTER_IP = "192.168.25.200"
 K8SWORKER_IP = "192.168.25."
@@ -15,7 +14,7 @@ Vagrant.configure("2") do |config|
   # master node
   config.vm.define "k8s-master" do |cfg|
     cfg.vm.box = IMAGE_NAME
-    cfg.vm.network "private_network", ip: K8SMASTER_IP, virtualbox__intnet: INET
+    cfg.vm.network "public_network", ip: K8SMASTER_IP
     cfg.vm.hostname = "k8s-master"
     
     cfg.vm.provider "virtualbox" do |v|
@@ -33,7 +32,7 @@ Vagrant.configure("2") do |config|
   (1..N).each do |i|
     config.vm.define "k8s-worekr-#{i}" do |cfg|
       cfg.vm.box = IMAGE_NAME
-      cfg.vm.network "private_network", ip: K8SWORKER_IP + "#{i+10}", virtualbox__intnet: INET
+      cfg.vm.network "public_network", ip: K8SWORKER_IP + "#{i+10}"
       cfg.vm.hostname = "k8s-worker-#{i}"
       
       cfg.vm.provider "virtualbox" do |v|
@@ -53,7 +52,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "k8s-bootstrap" do |cfg|
     cfg.vm.box = IMAGE_NAME
     cfg.vm.hostname = "ansible-server-4"
-    cfg.vm.network "private_network", ip: ANSIBLE_SERVERIP, virtualbox__intnet: INET
+    cfg.vm.network "public_network", ip: ANSIBLE_SERVERIP
 
     cfg.vm.provider "virtualbox" do |v|
       v.memory = 2048
