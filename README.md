@@ -1,36 +1,44 @@
-# 개요
-* centos에서 k8s 설치
+- [1. 개요](#1-개요)
+- [2. 설정](#2-설정)
+  - [ip 수정](#ip-수정)
+- [3. 설치](#3-설치)
+- [4. 삭제](#4-삭제)
+- [3. 참고자료](#3-참고자료)
 
-# 각 노드 IP 수동 설정
-* 제일 마지막줄에 --node-ip 추가
-```
-sudo vi /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+# 1. 개요
+* vagrant와 ansible을 이용하여 쿠버네티스 자동 설치
+* node os: centos7
 
-ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS --node-ip [ip]
-```
-* 서비스 재실행
-```
-sudo systemctl daemon reload
-sudo systemctl restart kubelet
-```
+<br>
 
-# 대시보드 설치
-* 헬름 설치
-* 대시보드 설치
-```
-helm install stable/kubernetes-dashboard --generate-name
-```
-* 프록시
-```
-kubectl proxy --address='0.0.0.0' --port=8001 --accept-hosts='.*'
-```
-* 접속
-```
-http://[마스터IP]:8001/api/v1/namespaces/default/services/https:kubernetes-dashboard-1606573807:/proxy/
+# 2. 설정
+## ip 수정
+* bootstrap
+  * ansible_workspace/add_hosts.yaml 3번째 줄 수정
+* masternode ip
+  * ansible_workspace/add_hosts.yaml 12번째 줄 수정
+  * Vagrantfile 4번째 줄 수정
+* workernode ip
+  * ansible_workspace/add_hosts.yaml 5번째 줄 수정
+  * Vagrantfile 15번째 줄부터 수정
+
+<br>
+
+# 3. 설치
+```sh
+vagrant up
 ```
 
+<br>
 
-# 참고자료
+# 4. 삭제
+```sh
+vagrant destroy
+```
+
+<br>
+
+# 3. 참고자료
 * [1] dashboard 설치 영상: https://youtu.be/6MnsSvChl1E
 * [2] install k8s playbooks role: https://github.com/geerlingguy/ansible-role-kubernetes/blob/master/tasks/main.yml
 * [3] dashboard 공식문서: https://kubernetes.io/ko/docs/tasks/access-application-cluster/web-ui-dashboard/
