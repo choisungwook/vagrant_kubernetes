@@ -1,7 +1,7 @@
 IMAGE_NAME = "centos/7"
 N = 2
 INET = "kubernetes_network"
-ANSIBLE_SERVERIP = "172.16.10.240"
+ANSIBLE_SERVERIP = "192.168.25.240"
 K8SMASTER_IP = "192.168.25.200"
 K8SWORKER_IP = "192.168.25."
 MASTER_NODE_RAM = 8192
@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
 
 
   # ansible-server
-  config.vm.define "ansible-server4" do |cfg|
+  config.vm.define "k8s-bootstrap" do |cfg|
     cfg.vm.box = IMAGE_NAME
     cfg.vm.hostname = "ansible-server-4"
     cfg.vm.network "private_network", ip: ANSIBLE_SERVERIP, virtualbox__intnet: INET
@@ -58,7 +58,7 @@ Vagrant.configure("2") do |config|
     cfg.vm.provider "virtualbox" do |v|
       v.memory = 2048
       v.cpus = 2
-      v.name =  "ansible-server-4"
+      v.name =  "k8s-ansible-server-4"
     end
     cfg.vm.provision  "shell", inline: <<-SCRIPT
       yum install epel-release -y
