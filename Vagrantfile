@@ -64,8 +64,8 @@ Vagrant.configure("2") do |config|
       yum install epel-release -y
       yum install python36 libselinux-python3 -y 
       yum install sshpass -y
-      pip3 install ansible
       pip3 install -U pip
+      pip3 install ansible
       sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
       systemctl restart sshd
     SCRIPT
