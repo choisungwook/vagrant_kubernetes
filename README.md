@@ -25,8 +25,16 @@
 <br>
 
 # 3. 설치
+* cluster 설치
 ```sh
 vagrant up
+```
+
+* kubeconfig 복사
+```sh
+vagrant ssh k8s-master
+sudo su ; root계정 스위칭
+cp -r /home/vagrant/.kube/ /root/.kube
 ```
 
 <br>
