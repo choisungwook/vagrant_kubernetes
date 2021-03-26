@@ -44,3 +44,8 @@
   become: false
   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"
   when: not kubernetes_init_stat.stat.exists
+
+- name: Enable kubelet
+  service:
+    name: kubelet
+    enabled: yes
