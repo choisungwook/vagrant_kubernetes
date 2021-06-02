@@ -1,2 +1,5 @@
 # vagrant directory
 .vagrant/*
+
+# python virtualenv
+venv/*
