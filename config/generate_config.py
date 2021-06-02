@@ -9,13 +9,13 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument("--controlPlaneIPS", type=str, required=True, help="control-plane IPS")
 parser.add_argument("--controlPlaneCPU", type=str, required=False, default="4", help="control-plane CPU")
-parser.add_argument("--controlPlaneMemory", type=str, required=False, default="4Gi", help="control-plane Mmeory")
+parser.add_argument("--controlPlaneMemory", type=str, required=False, default="4096", help="control-plane Mmeory") # 4GB
 parser.add_argument("--workerIPS", type=str, required=True, help="worker-node IPS")
 parser.add_argument("--workerCPU", type=str, required=False, default="4", help="worker-node CPU")
-parser.add_argument("--workerMemory", type=str, required=False, default="16Gi", help="worker-node Memory")
+parser.add_argument("--workerMemory", type=str, required=False, default="16384", help="worker-node Memory") # 16GB
 parser.add_argument("--bootstrapIP", type=str, required=True, help="bootstrap IPS")
-parser.add_argument("--bootstrapCPU", type=str, required=False, default="2", help="bootstrap CPU")
-parser.add_argument("--bootstrapMemory", type=str, required=False, default="2Gi", help="bootstrap Memory")
+parser.add_argument("--bootstrapCPU", type=str, required=False, default="2", help="bootstrap CPU") 
+parser.add_argument("--bootstrapMemory", type=str, required=False, default="2048", help="bootstrap Memory") # 2GB
 args = parser.parse_args()
 
 
