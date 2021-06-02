@@ -1,63 +1,57 @@
-IMAGE_NAME = "centos/7"
-N = 2
-ANSIBLE_SERVERIP = "192.168.25.240"
-K8SMASTER_IP = "192.168.25.200"
-K8SWORKER_IP = "192.168.25."
-MASTER_NODE_RAM = 8192
-MASTER_NODE_CPU = 4
-WORKER_NODE_RAM = 16384
-WORKER_NODE_CPU = 6
+require 'yaml'
+
+CONFIG = YAML.load_file(File.join(File.dirname(__FILE__), 'config.yml'))
 
 Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
 
-  # master node
-  config.vm.define "k8s-master" do |cfg|
-    cfg.vm.box = IMAGE_NAME
-    cfg.vm.network "public_network", ip: K8SMASTER_IP
-    cfg.vm.hostname = "k8s-master"
+  # # master node
+  # config.vm.define "k8s-master" do |cfg|
+  #   cfg.vm.box = IMAGE_NAME
+  #   cfg.vm.network "public_network", ip: K8Scontrolplane_IP
+  #   cfg.vm.hostname = "k8s-master"
     
-    cfg.vm.provider "virtualbox" do |v|
-      v.memory = MASTER_NODE_RAM
-      v.cpus = MASTER_NODE_CPU
-      v.name = "k8s-master"
-    end
-    cfg.vm.provision "shell", inline: <<-SCRIPT
-      sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-      systemctl restart sshd
-    SCRIPT
-  end
+  #   cfg.vm.provider "virtualbox" do |v|
+  #     v.memory = MASTER_NODE_RAM
+  #     v.cpus = MASTER_NODE_CPU
+  #     v.name = "k8s-master"
+  #   end
+  #   cfg.vm.provision "shell", inline: <<-SCRIPT
+  #     sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+  #     systemctl restart sshd
+  #   SCRIPT
+  # end
 
-  # worker node
-  (1..N).each do |i|
-    config.vm.define "k8s-worekr-#{i}" do |cfg|
-      cfg.vm.box = IMAGE_NAME
-      cfg.vm.network "public_network", ip: K8SWORKER_IP + "#{i+10}"
-      cfg.vm.hostname = "k8s-worker-#{i}"
+  # # worker node
+  # (1..N).each do |i|
+  #   config.vm.define "k8s-worekr-#{i}" do |cfg|
+  #     cfg.vm.box = IMAGE_NAME
+  #     cfg.vm.network "public_network", ip: K8SWORKER_IP + "#{i+10}"
+  #     cfg.vm.hostname = "k8s-worker-#{i}"
       
-      cfg.vm.provider "virtualbox" do |v|
-        v.memory = WORKER_NODE_RAM
-        v.cpus = WORKER_NODE_CPU
-        v.name = "k8s-worker-#{i}"
-      end
-      cfg.vm.provision "shell", inline: <<-SCRIPT
-        sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-        systemctl restart sshd
-      SCRIPT
-    end
-  end
+  #     cfg.vm.provider "virtualbox" do |v|
+  #       v.memory = WORKER_NODE_RAM
+  #       v.cpus = WORKER_NODE_CPU
+  #       v.name = "k8s-worker-#{i}"
+  #     end
+  #     cfg.vm.provision "shell", inline: <<-SCRIPT
+  #       sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+  #       systemctl restart sshd
+  #     SCRIPT
+  #   end
+  # end
 
 
-  # ansible-server
-  config.vm.define "k8s-bootstrap" do |cfg|
-    cfg.vm.box = IMAGE_NAME
-    cfg.vm.hostname = "ansible-server-4"
-    cfg.vm.network "public_network", ip: ANSIBLE_SERVERIP
+  # bootstrap-server
+  config.vm.define CONFIG['vagrant-bootstrap']['name'] do |cfg|
+    cfg.vm.box = CONFIG['vagrant-bootstrap']['box']
+    cfg.vm.hostname = CONFIG['vagrant-bootstrap']['hostname']
+    cfg.vm.network "public_network", ip: CONFIG['vagrant-bootstrap']['ip']
 
     cfg.vm.provider "virtualbox" do |v|
-      v.memory = 2048
-      v.cpus = 2
-      v.name =  "k8s-ansible-server-4"
+      v.memory = CONFIG['vagrant-bootstrap']['memory']
+      v.cpus = CONFIG['vagrant-bootstrap']['cpu']
+      v.name = CONFIG['vagrant-bootstrap']['hostname']
     end
     cfg.vm.provision  "shell", inline: <<-SCRIPT
       yum install epel-release -y
@@ -70,14 +64,14 @@ Vagrant.configure("2") do |config|
     SCRIPT
 
     # copy ansible files
-    cfg.vm.provision "file", source: "./ansible_workspace", destination: "ansible_workspace"
-    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/add_hosts.yaml", privileged: false
-    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/configure_ssh.yaml -i /home/vagrant/hosts", privileged: false
+    # cfg.vm.provision "file", source: "./ansible_workspace", destination: "ansible_workspace"
+    # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/add_hosts.yaml", privileged: false
+    # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/configure_ssh.yaml -i /home/vagrant/hosts", privileged: false
 
-    # run k8s-master role                               
-    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
+    # # run k8s-master role                               
+    # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
 
-    # run k8s-worker role
-    cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
+    # # run k8s-worker role
+    # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
   end
 end
