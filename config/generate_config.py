@@ -50,7 +50,8 @@ def generate_template(config):
 
 def create_vagrant_configfile(bootstrap_config, controlplane_configs, worker_configs):
     '''
-        yaml템플릿 생성
+        vagrant_config파일 생성
+        생성위치: ../config.yml
     '''
     
     if not bootstrap_config:
