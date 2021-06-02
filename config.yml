@@ -1,0 +1,32 @@
+vagrant-bootstrap:  
+  name: vagrant-bootstrap
+  box: centos/7
+  hostname: vagrant-bootstrap
+  ip: 192.168.25.200
+  memory: 2Gi
+  cpu: 2
+  
+vagrant-controlpalne-1:  
+  name: vagrant-controlpalne-1
+  box: centos/7
+  hostname: vagrant-controlpalne-1
+  ip: 192.169.25.221
+  memory: 4Gi
+  cpu: 4
+  
+vagrant-worker-1:  
+  name: vagrant-worker-1
+  box: centos/7
+  hostname: vagrant-worker-1
+  ip: 192.168.25.223
+  memory: 16Gi
+  cpu: 4
+  
+vagrant-worker-2:  
+  name: vagrant-worker-2
+  box: centos/7
+  hostname: vagrant-worker-2
+  ip: 192.168.25.224
+  memory: 16Gi
+  cpu: 4
+  
