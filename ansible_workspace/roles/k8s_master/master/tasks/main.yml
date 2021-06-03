@@ -8,14 +8,14 @@
   yum:
     name: epel-release
     state: latest
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: disable firewalld
   ansible.builtin.service:
     name: firewalld
     state: stopped
     enabled: no
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Remove swapfile from /etc/fstab
   mount:
@@ -25,27 +25,27 @@
   with_items:
     - swap
     - none
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Disable swap
   command: swapoff -a
   when: 
     - ansible_swaptotal_mb > 0
-    - not kubernetes_adminconf.exists
+    - not kubernetes_adminconf.stat.exists
 
 - name: Set SELinux in permissive mode-1
   command: "setenforce 0"
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Set SELinux in permissive mode-2
   command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Ensure br_netfilter is enabled.
   modprobe:
     name: br_netfilter
     state: present
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
     
 - name: Letting iptables see bridged traffic
   sysctl:
@@ -55,7 +55,7 @@
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Ensure Kubernetes repository exists.
   yum_repository:
@@ -70,7 +70,7 @@
     - kubelet
     - kubeadm
     - kubectl
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Add Kubernetes GPG keys.
   rpm_key:
@@ -78,13 +78,13 @@
     state: present
   register: kubernetes_rpm_key
   with_items: "{{ kubernetes_yum_gpg_key }}"
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Make cache if Kubernetes GPG key changed.
   command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
   when: 
     - kubernetes_rpm_key is changed
-    - kubernetes_adminconf.exists
+    - kubernetes_adminconf.stat.exists
   args:
     warn: false
 
@@ -98,14 +98,14 @@
   - kubeadm
   - kubectl
   notify: restart kubelet
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: change kubelet ip
   replace:
     path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '\$KUBELET_EXTRA_ARGS'
     replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
-  when: not kubernetes_adminconf.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Initialize the Kubernetes cluster using kubeadm
   command: > 
