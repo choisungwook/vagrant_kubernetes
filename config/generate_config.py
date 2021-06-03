@@ -37,7 +37,6 @@ def generate_template(config):
         with open('template.yml', 'r') as f:
             return chevron.render(f, 
                 {
-                    'config_key': config['keyname'],
                     'image': config['image'],
                     'name': config['name'],
                     'ip': config['ip'],
@@ -66,10 +65,10 @@ def create_vagrant_configfile(bootstrap_config, controlplane_configs, worker_con
         with open('vagrant_template.yml', 'r') as f:
             vagrant_config = chevron.render(f, 
                 {
-                    'masters': bootstrap_config,
-                    'worekrs': "\n".join(controlplane_configs),
+                    'controlplanes': "\n".join(controlplane_configs),
+                    'worekrs': "\n".join(worker_configs),
                     'numberOfworkers': len(worker_configs),
-                    'bootstrap': "\n".join(worker_configs),
+                    'bootstrap': bootstrap_config,
                 }
             )
 
@@ -107,25 +106,24 @@ if __name__=="__main__":
         print("\n")
 
         # 1. ping test
-        print("[*] ping test start")
-        if ping_to_configIP(bootstrap_IP):
-            raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
+        # print("[*] ping test start")
+        # if ping_to_configIP(bootstrap_IP):
+        #     raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
 
-        for controlplane_IP in controlplane_IPS:
-            if ping_to_configIP(controlplane_IP):
-                raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
+        # for controlplane_IP in controlplane_IPS:
+        #     if ping_to_configIP(controlplane_IP):
+        #         raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
 
-        for worekr_IP in worker_IPS:
-            if ping_to_configIP(worekr_IP):
-                raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
-        print("[*] ping test done")
-        print("\n")
+        # for worekr_IP in worker_IPS:
+        #     if ping_to_configIP(worekr_IP):
+        #         raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
+        # print("[*] ping test done")
+        # print("\n")
 
         # 2. genreate template
         print("[*] generate bootstrap config")
         bootstrap_nodename= f"vagrant-bootstrap"
         bootstrap_config_dict = {
-            'keyname': bootstrap_nodename,
             'image': vagrant_image,
             'name': bootstrap_nodename,
             'ip': args.bootstrapIP,

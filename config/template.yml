@@ -1,8 +1,7 @@
-{{config_key}}:  
-  name: {{name}}
-  box: {{image}}
-  hostname: {{name}}
-  ip: {{ip}}
-  memory: {{memory}}
-  cpu: {{cpu}}
+  - name: {{name}}
+    box: {{image}}
+    hostname: {{name}}
+    ip: {{ip}}
+    memory: {{memory}}
+    cpu: {{cpu}}
   

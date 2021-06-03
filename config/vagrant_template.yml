@@ -1,4 +1,7 @@
-{{masters}}
-numberOfworkers: {{numberOfworkers}}
+controlplanes:
+{{controlplanes}}
+workers:  
 {{worekrs}}
+bootstrap:
 {{bootstrap}}
+numberOfworkers: {{numberOfworkers}}

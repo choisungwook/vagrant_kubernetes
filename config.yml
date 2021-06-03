@@ -1,33 +1,32 @@
-vagrant-bootstrap:  
-  name: vagrant-bootstrap
-  box: centos/7
-  hostname: vagrant-bootstrap
-  ip: 192.168.25.220
-  memory: 2048
-  cpu: 2
+controlplanes:
+  - name: vagrant-controlpalne-1
+    box: centos/7
+    hostname: vagrant-controlpalne-1
+    ip: 192.169.25.221
+    memory: 4096
+    cpu: 4
+  
+workers:  
+  - name: vagrant-worker-1
+    box: centos/7
+    hostname: vagrant-worker-1
+    ip: 192.168.25.223
+    memory: 16384
+    cpu: 4
+  
+  - name: vagrant-worker-2
+    box: centos/7
+    hostname: vagrant-worker-2
+    ip: 192.168.25.224
+    memory: 16384
+    cpu: 4
+  
+bootstrap:
+  - name: vagrant-bootstrap
+    box: centos/7
+    hostname: vagrant-bootstrap
+    ip: 192.168.25.220
+    memory: 2048
+    cpu: 2
   
 numberOfworkers: 2
-vagrant-controlpalne-1:  
-  name: vagrant-controlpalne-1
-  box: centos/7
-  hostname: vagrant-controlpalne-1
-  ip: 192.169.25.221
-  memory: 4096
-  cpu: 4
-  
-vagrant-worker-1:  
-  name: vagrant-worker-1
-  box: centos/7
-  hostname: vagrant-worker-1
-  ip: 192.168.25.223
-  memory: 16384
-  cpu: 4
-  
-vagrant-worker-2:  
-  name: vagrant-worker-2
-  box: centos/7
-  hostname: vagrant-worker-2
-  ip: 192.168.25.224
-  memory: 16384
-  cpu: 4
-  
