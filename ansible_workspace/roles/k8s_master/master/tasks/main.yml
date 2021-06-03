@@ -1,23 +1,156 @@
 ---
+- name: Check if Kubernetes has already been initialized.
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubernetes_adminconf
 
 - name: Add the epel-release
   yum:
     name: epel-release
     state: latest
+  when: not kubernetes_adminconf.exists
 
-- name: Install the git
+- name: disable firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: no
+  when: not kubernetes_adminconf.exists
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+  when: not kubernetes_adminconf.exists
+
+- name: Disable swap
+  command: swapoff -a
+  when: 
+    - ansible_swaptotal_mb > 0
+    - not kubernetes_adminconf.exists
+
+- name: Set SELinux in permissive mode-1
+  command: "setenforce 0"
+  when: not kubernetes_adminconf.exists
+
+- name: Set SELinux in permissive mode-2
+  command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
+  when: not kubernetes_adminconf.exists
+
+- name: Ensure br_netfilter is enabled.
+  modprobe:
+    name: br_netfilter
+    state: present
+  when: not kubernetes_adminconf.exists
+    
+- name: Letting iptables see bridged traffic
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    state: present
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+  when: not kubernetes_adminconf.exists
+
+- name: Ensure Kubernetes repository exists.
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    enabled: true
+    gpgcheck: true
+    repo_gpgcheck: true
+    baseurl: "{{ kubernetes_yum_base_url }}"
+    gpgkey: "{{ kubernetes_yum_gpg_key }}"
+    exclude:
+    - kubelet
+    - kubeadm
+    - kubectl
+  when: not kubernetes_adminconf.exists
+
+- name: Add Kubernetes GPG keys.
+  rpm_key:
+    key: "{{ item }}"
+    state: present
+  register: kubernetes_rpm_key
+  with_items: "{{ kubernetes_yum_gpg_key }}"
+  when: not kubernetes_adminconf.exists
+
+- name: Make cache if Kubernetes GPG key changed.
+  command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
+  when: 
+    - kubernetes_rpm_key is changed
+    - kubernetes_adminconf.exists
+  args:
+    warn: false
+
+- name: install k8s(kubelet, kubeadm, kubectl)
   yum:
-    name: git
-    state: latest
+    name: "{{ item }}"
+    state: present
+    disable_excludes: 'kubernetes'
+  with_items:
+  - kubelet
+  - kubeadm
+  - kubectl
+  notify: restart kubelet
+  when: not kubernetes_adminconf.exists
 
-- include_tasks: disable-swap.yml
+- name: change kubelet ip
+  replace:
+    path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '\$KUBELET_EXTRA_ARGS'
+    replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
+  when: not kubernetes_adminconf.exists
 
-- include_tasks: syctl-setup.yml
+- name: Initialize the Kubernetes cluster using kubeadm
+  command: > 
+    kubeadm init 
+    --apiserver-advertise-address="{{ ansible_host }}" 
+    --apiserver-cert-extra-sans="{{ ansible_host }}" 
+    --node-name="{{ master_name }}" 
+    --pod-network-cidr="{{ pod_cidr }}"
+  register: kubeadmin_init
+  when: not kubernetes_adminconf.stat.exists
 
-- include_tasks: install-docker.yml
+- name: Print the init output to screen.
+  debug:
+    var: kubeadmin_init.stdout
+    verbosity: 2
+  when: not kubernetes_adminconf.stat.exists
 
-- include_tasks: k8srepo-setup.yml
+- name: copy kubeconfig
+  command: "{{ item }}"
+  with_items:
+  - mkdir -p "{{ kubeconfig_location }}"
+  - cp -i /etc/kubernetes/admin.conf "{{ kubeconfig_location }}/config"
+  - chown "{{kubeconfig_chown}}":"{{kubeconfig_chown}}" "{{ kubeconfig_location }}/config"
+  when: not kubernetes_adminconf.stat.exists
 
-- include_tasks: install-k8s.yml
+# default calico cidr: 192.168.0.0/16
+- name: Install calico pod network
+  become: false
+  retries: 3
+  delay: 3
+  command: kubectl apply -f "{{ calico_url }}"
+  when: not kubernetes_adminconf.stat.exists
 
-- include_tasks: create_cluster.yml
+- name: Generate join command
+  command: kubeadm token create --print-join-command
+  register: join_command
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Copy join command to local file
+  become: false
+  local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="{{join_command_location}}"
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Enable kubelet
+  service:
+    name: kubelet
+    enabled: yes
+  when: not kubernetes_adminconf.stat.exists

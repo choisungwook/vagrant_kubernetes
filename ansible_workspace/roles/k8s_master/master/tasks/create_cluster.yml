@@ -2,7 +2,7 @@
 - name: Check if Kubernetes has already been initialized.
   stat:
     path: /etc/kubernetes/admin.conf
-  register: kubernetes_init_stat
+  register: kubernetes_adminconf
 
 - name: Initialize the Kubernetes cluster using kubeadm
   command: > 
@@ -12,13 +12,13 @@
     --node-name "{{ master_name }}" 
     --pod-network-cidr=172.16.0.0/16
   register: kubeadmin_init
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Print the init output to screen.
   debug:
     var: kubeadmin_init.stdout
     verbosity: 2
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Setup kubeconfig for vagrant user
   command: "{{ item }}"
@@ -26,24 +26,24 @@
   - mkdir -p /home/vagrant/.kube
   - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
   - chown vagrant:vagrant /home/vagrant/.kube/config
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Install calico pod network
   become: false
   retries: 3
   delay: 3
   command: kubectl apply -f "{{ calico_url }}"
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Generate join command
   command: kubeadm token create --print-join-command
   register: join_command
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Copy join command to local file
   become: false
   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Enable kubelet
   service:
