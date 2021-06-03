@@ -1,7 +1,7 @@
 controlplanes:
 {{controlplanes}}
 workers:  
-{{worekrs}}
+{{workers}}
 bootstrap:
 {{bootstrap}}
 numberOfworkers: {{numberOfworkers}}

@@ -60,19 +60,34 @@ def create_vagrant_configfile(bootstrap_config, controlplane_configs, worker_con
     if not worker_configs or len(worker_configs) == 0:
         raise UserDefinedException(f"[-] create_vagrant_configfile Error: controlplane_configs is None")
 
-    print()
     try:
         with open('vagrant_template.yml', 'r') as f:
             vagrant_config = chevron.render(f, 
                 {
                     'controlplanes': "\n".join(controlplane_configs),
-                    'worekrs': "\n".join(worker_configs),
+                    'workers': "\n".join(worker_configs),
                     'numberOfworkers': len(worker_configs),
                     'bootstrap': bootstrap_config,
                 }
             )
 
         output_path = os.path.join(Path(os.getcwd()).parent, 'config.yml')
+        with open(output_path, 'w') as f:
+            f.write(vagrant_config)
+    except Exception as e:
+        raise UserDefinedException(f"[-] generate_template Error: {e}")
+
+def create_ansible_inventory(controlplane_IPS, worker_IPS):
+    try:
+        with open('inventory_template.yml', 'r') as f:
+            vagrant_config = chevron.render(f, 
+                {
+                    'masters': controlplane_IPS,
+                    'workers': worker_IPS,
+                }
+            )
+
+        output_path = os.path.join(Path(os.getcwd()).parent, 'ansible_workspace', 'test.yml')
         with open(output_path, 'w') as f:
             f.write(vagrant_config)
     except Exception as e:
@@ -106,19 +121,19 @@ if __name__=="__main__":
         print("\n")
 
         # 1. ping test
-        print("[*] ping test start")
-        if ping_to_configIP(bootstrap_IP):
-            raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
+        # print("[*] ping test start")
+        # if ping_to_configIP(bootstrap_IP):
+        #     raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
 
-        for controlplane_IP in controlplane_IPS:
-            if ping_to_configIP(controlplane_IP):
-                raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
+        # for controlplane_IP in controlplane_IPS:
+        #     if ping_to_configIP(controlplane_IP):
+        #         raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
 
-        for worekr_IP in worker_IPS:
-            if ping_to_configIP(worekr_IP):
-                raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
-        print("[*] ping test done")
-        print("\n")
+        # for worekr_IP in worker_IPS:
+        #     if ping_to_configIP(worekr_IP):
+        #         raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
+        # print("[*] ping test done")
+        # print("\n")
 
         # 2. genreate template
         print("[*] generate bootstrap config")
@@ -164,7 +179,9 @@ if __name__=="__main__":
         # 3. create vagrant_config.yml
         create_vagrant_configfile(bootstrap_config, controlplane_configs, worker_configs)
 
-        
+        # 4. create ansible inventory.yml
+        create_ansible_inventory(controlplane_IPS, worker_IPS)
+
     except Exception as e:
         print(f"error: {e}")
 
