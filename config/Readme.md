@@ -21,5 +21,5 @@ vagrant를 실행하기 위한 설정파일(config.yml)을 생성하는 파이�
 * workerIPS: 쿠버네티스 worker IPS
   * IP 1개 이상 IP입력
 ```sh
-python generate_config.py --bootstrapIP="192.168.25.220" --controlPlaneIPS="192.169.25.221" --workerIPS="192.168.25.223,192.168.25.224"
+python generate_config.py --bootstrapIP="192.168.25.220" --controlPlaneIPS="192.168.25.221" --workerIPS="192.168.25.223,192.168.25.224"
 ```

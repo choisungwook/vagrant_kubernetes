@@ -2,7 +2,7 @@ controlplanes:
   - name: vagrant-controlpalne-1
     box: centos/7
     hostname: vagrant-controlpalne-1
-    ip: 192.169.25.221
+    ip: 192.168.25.221
     memory: 4096
     cpu: 4
   
