@@ -6,6 +6,7 @@ vagrant-bootstrap:
   memory: 2048
   cpu: 2
   
+numberOfworkers: 2
 vagrant-controlpalne-1:  
   name: vagrant-controlpalne-1
   box: centos/7

@@ -1,3 +1,4 @@
 {{masters}}
+numberOfworkers: {{numberOfworkers}}
 {{worekrs}}
 {{bootstrap}}

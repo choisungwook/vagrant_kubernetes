@@ -68,6 +68,7 @@ def create_vagrant_configfile(bootstrap_config, controlplane_configs, worker_con
                 {
                     'masters': bootstrap_config,
                     'worekrs': "\n".join(controlplane_configs),
+                    'numberOfworkers': len(worker_configs),
                     'bootstrap': "\n".join(worker_configs),
                 }
             )
