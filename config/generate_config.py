@@ -87,7 +87,7 @@ def create_ansible_inventory(controlplane_IPS, worker_IPS):
                 }
             )
 
-        output_path = os.path.join(Path(os.getcwd()).parent, 'ansible_workspace', 'test.yml')
+        output_path = os.path.join(Path(os.getcwd()).parent, 'ansible_workspace', 'add_hosts.yml')
         with open(output_path, 'w') as f:
             f.write(vagrant_config)
     except Exception as e:
@@ -121,19 +121,19 @@ if __name__=="__main__":
         print("\n")
 
         # 1. ping test
-        # print("[*] ping test start")
-        # if ping_to_configIP(bootstrap_IP):
-        #     raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
+        print("[*] ping test start")
+        if ping_to_configIP(bootstrap_IP):
+            raise UserDefinedException(f"bootstrap IP is already exists: {bootstrap_IP}")
 
-        # for controlplane_IP in controlplane_IPS:
-        #     if ping_to_configIP(controlplane_IP):
-        #         raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
+        for controlplane_IP in controlplane_IPS:
+            if ping_to_configIP(controlplane_IP):
+                raise UserDefinedException(f"master IP is already exists: {controlplane_IP}")
 
-        # for worekr_IP in worker_IPS:
-        #     if ping_to_configIP(worekr_IP):
-        #         raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
-        # print("[*] ping test done")
-        # print("\n")
+        for worekr_IP in worker_IPS:
+            if ping_to_configIP(worekr_IP):
+                raise UserDefinedException(f"worker IP is already exists: {worekr_IP}")
+        print("[*] ping test done")
+        print("\n")
 
         # 2. genreate template
         print("[*] generate bootstrap config")
