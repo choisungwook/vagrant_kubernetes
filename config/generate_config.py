@@ -87,7 +87,7 @@ def create_ansible_inventory(controlplane_IPS, worker_IPS):
                 }
             )
 
-        output_path = os.path.join(Path(os.getcwd()).parent, 'ansible_workspace', 'add_hosts.yml')
+        output_path = os.path.join(Path(os.getcwd()).parent, 'ansible_workspace', 'add_hosts.yaml')
         with open(output_path, 'w') as f:
             f.write(vagrant_config)
     except Exception as e:
