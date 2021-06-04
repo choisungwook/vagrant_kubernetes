@@ -17,7 +17,7 @@ calico_url: "https://docs.projectcalico.org/manifests/calico.yaml"
 pod_cidr: "172.16.0.0/16"
 
 # node_ip
-master_name: "master1"
+node_name: "control-plane-1"
 
 # kubeconfig copy location
 kubeconfig_location: "/root/.kube"

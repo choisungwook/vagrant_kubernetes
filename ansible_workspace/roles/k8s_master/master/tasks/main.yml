@@ -3,12 +3,12 @@
   stat:
     path: /etc/kubernetes/admin.conf
   register: kubernetes_adminconf
+  # failed_when: kubernetes_adminconf.stat.exists
 
-- name: Add the epel-release
-  yum:
-    name: epel-release
-    state: latest
-  when: not kubernetes_adminconf.stat.exists
+
+### 
+### Prerequisite
+###
 
 - name: disable firewalld
   ansible.builtin.service:
@@ -41,21 +41,93 @@
   command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
   when: not kubernetes_adminconf.stat.exists
 
+
+### 
+### containerd
+###
+
+- name: Add the Docker repo for installing containerd
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docer-ce.repo
+  when: not kubernetes_adminconf.stat.exists
+ 
+- name: Install containered Prerequisite packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - yum-utils
+  when: not kubernetes_adminconf.stat.exists
+
+- name: install containered
+  yum:
+    name: containerd.io
+    state: latest
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Check if containerd_conf
+  stat:
+    path:  /etc/modules-load.d/containerd.conf
+  register: containerd_conf
+
+- name: Copy containerd.conf
+  copy: 
+    src: containerd.conf
+    dest: /etc/modules-load.d/containerd.conf
+    mode: 0755
+  when: not containerd_conf.stat.exists
+
 - name: Ensure br_netfilter is enabled.
   modprobe:
-    name: br_netfilter
-    state: present
-  when: not kubernetes_adminconf.stat.exists
-    
-- name: Letting iptables see bridged traffic
-  sysctl:
     name: "{{ item }}"
-    value: '1'
     state: present
   loop:
-    - net.bridge.bridge-nf-call-iptables
-    - net.bridge.bridge-nf-call-ip6tables
+    - br_netfilter
+    - overlay
   when: not kubernetes_adminconf.stat.exists
+
+- name: Check if kubernetes-cri.conf
+  stat:
+    path: /etc/sysctl.d/99-kubernetes-cri.conf
+  register: kubernetes_cri
+
+- name: Copy the kubernetes-cri.conf
+  copy: 
+    src: 99-kubernetes-cri.conf
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    mode: 0755
+  when: not kubernetes_cri.stat.exists
+
+- name: Copy the kubernetes-cri.conf
+  shell: sysctl --system
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Create a /etc/containerd directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+  when: not kubernetes_adminconf.stat.exists
+
+- name: create default config.toml
+  shell: containerd config default | tee /etc/containerd/config.toml
+  when: not kubernetes_adminconf.stat.exists
+
+- name: start containerd and enabled
+  ansible.builtin.service:
+    name: containerd
+    enabled: yes
+    state: started
+
+### 
+### install kubeadm, kubelet, kubectl
+###
+- name: Copy the join command to server location
+  copy: 
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
+    mode: 0755
 
 - name: Ensure Kubernetes repository exists.
   yum_repository:
@@ -97,22 +169,42 @@
   - kubelet
   - kubeadm
   - kubectl
-  notify: restart kubelet
   when: not kubernetes_adminconf.stat.exists
+
+- name: start containerd and enabled
+  ansible.builtin.service:
+    name: kubelet
+    enabled: yes
+    state: started
+
+# reference: https://stackoverflow.com/questions/41010378/ansible-shell-module-returns-error-when-grep-results-are-empty
+- name: Searching for a String in kubelet nodeIP
+  shell: grep "{{ ansible_host }}" /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf 
+  ignore_errors: yes
+  register: grep_output
 
 - name: change kubelet ip
   replace:
     path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '\$KUBELET_EXTRA_ARGS'
     replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
-  when: not kubernetes_adminconf.stat.exists
+  when: 
+    - not kubernetes_adminconf.stat.exists
+    - grep_output.stdout == ""
+
+### 
+### crictl configuration
+###
+
+### 
+### install kubernetes, calico
+###
 
 - name: Initialize the Kubernetes cluster using kubeadm
   command: > 
     kubeadm init 
     --apiserver-advertise-address="{{ ansible_host }}" 
-    --apiserver-cert-extra-sans="{{ ansible_host }}" 
-    --node-name="{{ master_name }}" 
+    --node-name="{{ node_name }}" 
     --pod-network-cidr="{{ pod_cidr }}"
   register: kubeadmin_init
   when: not kubernetes_adminconf.stat.exists
@@ -133,9 +225,8 @@
 
 # default calico cidr: 192.168.0.0/16
 - name: Install calico pod network
-  become: false
-  retries: 3
-  delay: 3
+  retries: 20
+  delay: 20
   command: kubectl apply -f "{{ calico_url }}"
   when: not kubernetes_adminconf.stat.exists
 
@@ -145,12 +236,5 @@
   when: not kubernetes_adminconf.stat.exists
 
 - name: Copy join command to local file
-  become: false
   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="{{join_command_location}}"
-  when: not kubernetes_adminconf.stat.exists
-
-- name: Enable kubelet
-  service:
-    name: kubelet
-    enabled: yes
   when: not kubernetes_adminconf.stat.exists
