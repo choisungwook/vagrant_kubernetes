@@ -7,8 +7,11 @@ kubernetes_yum_gpg_key:
 - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 
 # k8s CNI
-calico_url: "https://docs.projectcalico.org/v3.9/manifests/calico.yaml"
+# sepcific version
+# calico_url: "https://docs.projectcalico.org/v3.9/manifests/calico.yaml"
 
-# node_ip
-master_ip: "172.16.10.200"
-master_name: "master1"
+# latset version
+calico_url: "https://docs.projectcalico.org/manifests/calico.yaml"
+
+# join command to file location
+# join_command_location: "/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"

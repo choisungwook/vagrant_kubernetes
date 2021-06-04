@@ -22,6 +22,15 @@ Vagrant.configure("2") do |config|
         sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         systemctl restart sshd
       SCRIPT
+      # chrony configuration
+      cfg.vm.provision "file", source: "chrony.conf", destination: "/tmp/chrony.conf"
+      cfg.vm.provision  "shell", inline: <<-SCRIPT
+        cp /tmp/chrony.conf /etc/chrony.conf
+        timedatectl set-timezone Asia/Seoul
+        systemctl enable chronyd
+        systemctl restart chronyd
+        timedatectl set-ntp true
+      SCRIPT
     end
   end
 
@@ -41,6 +50,15 @@ Vagrant.configure("2") do |config|
         sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         systemctl restart sshd
       SCRIPT
+      # chrony configuration
+      cfg.vm.provision "file", source: "chrony.conf", destination: "/tmp/chrony.conf"
+      cfg.vm.provision  "shell", inline: <<-SCRIPT
+        cp /tmp/chrony.conf /etc/chrony.conf
+        timedatectl set-timezone Asia/Seoul
+        systemctl enable chronyd
+        systemctl restart chronyd
+        timedatectl set-ntp true
+      SCRIPT
     end
   end
 
@@ -56,6 +74,7 @@ Vagrant.configure("2") do |config|
         v.cpus = bootstrap['cpu']
         v.name = bootstrap['name']
       end
+      
       cfg.vm.provision  "shell", inline: <<-SCRIPT
         yum install epel-release -y
         yum install python36 libselinux-python3 -y 
@@ -65,6 +84,16 @@ Vagrant.configure("2") do |config|
         sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         systemctl restart sshd
       SCRIPT
+
+      # chrony configuration
+      cfg.vm.provision "file", source: "chrony.conf", destination: "/tmp/chrony.conf"
+      cfg.vm.provision  "shell", inline: <<-SCRIPT
+        cp /tmp/chrony.conf /etc/chrony.conf
+        timedatectl set-timezone Asia/Seoul
+        systemctl enable chronyd
+        systemctl restart chronyd
+        timedatectl set-ntp true
+      SCRIPT
   
       # copy ansible files
       cfg.vm.provision "file", source: "./ansible_workspace", destination: "ansible_workspace"
@@ -72,10 +101,10 @@ Vagrant.configure("2") do |config|
       cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/configure_ssh.yaml -i /home/vagrant/hosts", privileged: false
   
       # # run k8s-master role                               
-      cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
+      # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
   
       # # run k8s-worker role
-      # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
+      cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
     end
   end
 end

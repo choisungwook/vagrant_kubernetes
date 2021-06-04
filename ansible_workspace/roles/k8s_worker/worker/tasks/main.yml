@@ -1,23 +1,212 @@
 ---
+# failed_when: kubernetes_init_stat.stat.exists
+- name: Check if already joind
+  stat:
+    path: /etc/cni
+  register: kubernetes_init_stat
 
-- name: Add the epel-release
-  yum:
-    name: epel-release
+### 
+### Prerequisite
+###
+
+- name: disable firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: no
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Disable swap
+  command: swapoff -a
+  when: 
+    - ansible_swaptotal_mb > 0
+    - not kubernetes_init_stat.stat.exists
+
+- name: Set SELinux in permissive mode-1
+  command: "setenforce 0"
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Set SELinux in permissive mode-2
+  command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
+  when: not kubernetes_init_stat.stat.exists
+
+
+### 
+### containerd
+###
+
+- name: Add the Docker repo for installing containerd
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docer-ce.repo
+  when: not kubernetes_init_stat.stat.exists
+ 
+- name: Install containered Prerequisite packages
+  package:
+    name: "{{ item }}"
     state: latest
+  with_items:
+  - yum-utils
+  when: not kubernetes_init_stat.stat.exists
 
-- name: Install the git
+- name: install containered
   yum:
-    name: git
+    name: containerd.io
     state: latest
+  when: not kubernetes_init_stat.stat.exists
 
-- include_tasks: disable-swap.yml
+- name: Check if containerd_conf
+  stat:
+    path:  /etc/modules-load.d/containerd.conf
+  register: containerd_conf
 
-- include_tasks: syctl-setup.yml
+- name: Copy containerd.conf
+  copy: 
+    src: containerd.conf
+    dest: /etc/modules-load.d/containerd.conf
+    mode: 0755
+  when: not containerd_conf.stat.exists
 
-- include_tasks: install-docker.yml
+- name: Ensure br_netfilter is enabled.
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+  when: not kubernetes_init_stat.stat.exists
 
-- include_tasks: k8srepo-setup.yml
+- name: Check if kubernetes-cri.conf
+  stat:
+    path: /etc/sysctl.d/99-kubernetes-cri.conf
+  register: kubernetes_cri
 
-- include_tasks: install-k8s.yml
+- name: Copy the kubernetes-cri.conf
+  copy: 
+    src: 99-kubernetes-cri.conf
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    mode: 0755
+  when: not kubernetes_cri.stat.exists
 
-- include_tasks: join_cluster.yml
+- name: Copy the kubernetes-cri.conf
+  shell: sysctl --system
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Create a /etc/containerd directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+  when: not kubernetes_init_stat.stat.exists
+
+- name: create default config.toml
+  shell: containerd config default | tee /etc/containerd/config.toml
+  when: not kubernetes_init_stat.stat.exists
+
+- name: start containerd and enabled
+  ansible.builtin.service:
+    name: containerd
+    enabled: yes
+    state: started
+
+### 
+### install kubeadm, kubelet, kubectl
+###
+
+- name: Ensure Kubernetes repository exists.
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    enabled: true
+    gpgcheck: true
+    repo_gpgcheck: true
+    baseurl: "{{ kubernetes_yum_base_url }}"
+    gpgkey: "{{ kubernetes_yum_gpg_key }}"
+    exclude:
+    - kubelet
+    - kubeadm
+    - kubectl
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Add Kubernetes GPG keys.
+  rpm_key:
+    key: "{{ item }}"
+    state: present
+  register: kubernetes_rpm_key
+  with_items: "{{ kubernetes_yum_gpg_key }}"
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Make cache if Kubernetes GPG key changed.
+  command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
+  when: 
+    - kubernetes_rpm_key is changed
+    - kubernetes_init_stat.stat.exists
+  args:
+    warn: false
+
+- name: install k8s(kubelet, kubeadm, kubectl)
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_excludes: 'kubernetes'
+  with_items:
+  - kubelet
+  - kubeadm
+  - kubectl
+  when: not kubernetes_init_stat.stat.exists
+
+- name: start containerd and enabled
+  ansible.builtin.service:
+    name: kubelet
+    enabled: yes
+    state: started
+
+# reference: https://stackoverflow.com/questions/41010378/ansible-shell-module-returns-error-when-grep-results-are-empty
+- name: Searching for a String in kubelet nodeIP
+  shell: grep "{{ ansible_host }}" /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf 
+  ignore_errors: yes
+  register: grep_output
+
+- name: change kubelet ip
+  replace:
+    path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '\$KUBELET_EXTRA_ARGS'
+    replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
+  when: 
+    - not kubernetes_init_stat.stat.exists
+    - grep_output.stdout == ""
+
+### 
+### crictl configuration
+###
+
+- name: Copy the join command to server location
+  copy: 
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
+    mode: 0755
+
+### 
+### join kubernetes cluster
+###
+
+- name: Copy the join command to server location
+  copy: 
+    src: join-command
+    dest: /home/vagrant/join-command.sh
+    mode: 0755
+  when: not kubernetes_init_stat.stat.exists
+
+- name: Join the node to cluster
+  command: sh /home/vagrant/join-command.sh
+  when: not kubernetes_init_stat.stat.exists
