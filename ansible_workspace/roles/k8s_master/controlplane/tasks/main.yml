@@ -41,7 +41,6 @@
   command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
   when: not kubernetes_adminconf.stat.exists
 
-
 ### 
 ### containerd
 ###
@@ -123,11 +122,6 @@
 ### 
 ### install kubeadm, kubelet, kubectl
 ###
-- name: Copy the join command to server location
-  copy: 
-    src: crictl.yaml
-    dest: /etc/crictl.yaml
-    mode: 0755
 
 - name: Ensure Kubernetes repository exists.
   yum_repository:
@@ -195,6 +189,12 @@
 ### 
 ### crictl configuration
 ###
+
+- name: Copy the join command to server location
+  copy: 
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
+    mode: 0755
 
 ### 
 ### install kubernetes, calico
