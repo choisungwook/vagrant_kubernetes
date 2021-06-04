@@ -6,4 +6,4 @@
   become_method: sudo
 
   roles:
-    - master
+    - controlplane
