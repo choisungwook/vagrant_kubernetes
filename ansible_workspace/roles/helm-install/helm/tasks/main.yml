@@ -1,0 +1,26 @@
+---
+- name: Download helm
+  shell: curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+
+- name: Change permission get_helm.sh
+  ansible.builtin.file:
+    path: get_helm.sh
+    mode: '700'
+
+- name: install helm
+  shell: sh get_helm.sh
+  ignore_errors: yes
+
+- name: test helm
+  shell: /usr/local/bin/helm
+  register: test
+  failed_when: test.stdout == ""
+
+- name: Create a symbolic link
+  ansible.builtin.file:
+    src: /usr/local/bin/helm
+    dest: /usr/bin/helm
+    owner: root
+    group: root
+    state: link
+    
