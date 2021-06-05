@@ -1,0 +1,5 @@
+extraArgs:
+ - --enable-skip-login
+
+service:
+  type: NodePort

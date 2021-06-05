@@ -21,6 +21,9 @@ Vagrant.configure("2") do |config|
       cfg.vm.provision "shell", inline: <<-SCRIPT
         sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         systemctl restart sshd
+        yum install -y git
+        yum install python36 libselinux-python3 -y 
+        pip3 install pyyaml
       SCRIPT
       # chrony configuration
       cfg.vm.provision "file", source: "chrony.conf", destination: "/tmp/chrony.conf"
@@ -100,11 +103,16 @@ Vagrant.configure("2") do |config|
       cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/add_hosts.yaml", privileged: false
       cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/configure_ssh.yaml -i /home/vagrant/hosts", privileged: false
   
-      # # run k8s-master role                               
+      # run k8s-master role                               
       # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_master/site.yml -i /home/vagrant/hosts", privileged: false
   
-      # # run k8s-worker role
-      cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
+      # run k8s-worker role
+      # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/k8s_worker/site.yml -i /home/vagrant/hosts", privileged: false
+
+      # install helm and basic helm packages(dashboard, nginx ingress)
+      # cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/helm-install/site.yml -i /home/vagrant/hosts", privileged: false
+      cfg.vm.provision "shell", inline: "ansible-playbook ./ansible_workspace/roles/helm-dsashboard/site.yml -i /home/vagrant/hosts", privileged: false
+
     end
   end
 end

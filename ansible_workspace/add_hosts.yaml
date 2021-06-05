@@ -8,9 +8,15 @@
       copy:
         dest: /home/vagrant/hosts
         content: |
-          [master]          
+          [master]
           192.168.25.221
+
+          [master:vars]
+          ansible_python_interpreter=/usr/bin/python3
 
           [worker]
           192.168.25.223
           192.168.25.224
+
+          # [worker:vars]
+          # ansible_python_interpreter=/usr/bin/python3
