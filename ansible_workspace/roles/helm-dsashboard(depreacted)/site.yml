@@ -1,9 +1,9 @@
 ---
-- name: Install k8s-master
+- name: Install dashboard
   hosts: master
   remote_user: vagrant
   become: yes
   become_method: sudo
 
   roles:
-    - controlplane
+    - dashboard

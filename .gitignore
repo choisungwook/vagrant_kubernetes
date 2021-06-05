@@ -1,2 +1,12 @@
 # vagrant directory
 .vagrant/*
+
+# python virtualenv
+venv/*
+
+# python 
+__pycache__
+
+
+# vscode
+.vscode/*

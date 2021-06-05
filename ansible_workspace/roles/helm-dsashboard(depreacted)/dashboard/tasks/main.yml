@@ -1,0 +1,24 @@
+- name: Add dashboard repo
+  shell: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+
+- name: Copy dashboard override_values
+  copy: 
+    src: dashboard_override_values.yaml
+    dest: /home/vagrant/dashboard_override_values.yaml
+    mode: 0755
+
+- name: install helm 
+  shell: helm install --create-namespace -n kubernetes-dashboard -f dashboard_override_values.yaml kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard
+
+- name: service account clusterrolebinding
+  shell: kubectl create clusterrolebinding root-cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:kubernetes-dashboard
+
+
+# - name: Deploy latest version
+#   community.kubernetes.helm:
+#     name: kubernetes-dashboard
+#     chart_ref: kubernetes-dashboard
+#     release_namespace: kubernetes-dashboard
+#     values:
+#       service:
+#         type: NodePort

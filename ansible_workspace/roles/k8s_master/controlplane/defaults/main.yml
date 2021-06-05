@@ -13,5 +13,15 @@ kubernetes_yum_gpg_key:
 # latset version
 calico_url: "https://docs.projectcalico.org/manifests/calico.yaml"
 
+# pod cidr
+pod_cidr: "172.16.0.0/16"
+
+# node_ip
+node_name: "control-plane-1"
+
+# kubeconfig copy location
+kubeconfig_location: "/root/.kube"
+kubeconfig_chown: "root"
+
 # join command to file location
-# join_command_location: "/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"
+join_command_location: "/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"

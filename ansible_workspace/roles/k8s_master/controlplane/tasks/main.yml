@@ -1,9 +1,10 @@
 ---
-# failed_when: kubernetes_init_stat.stat.exists
-- name: Check if already joind
+- name: Check if Kubernetes has already been initialized.
   stat:
-    path: /etc/cni
-  register: kubernetes_init_stat
+    path: /etc/kubernetes/admin.conf
+  register: kubernetes_adminconf
+  # failed_when: kubernetes_adminconf.stat.exists
+
 
 ### 
 ### Prerequisite
@@ -14,7 +15,7 @@
     name: firewalld
     state: stopped
     enabled: no
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Remove swapfile from /etc/fstab
   mount:
@@ -24,22 +25,21 @@
   with_items:
     - swap
     - none
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Disable swap
   command: swapoff -a
   when: 
     - ansible_swaptotal_mb > 0
-    - not kubernetes_init_stat.stat.exists
+    - not kubernetes_adminconf.stat.exists
 
 - name: Set SELinux in permissive mode-1
   command: "setenforce 0"
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Set SELinux in permissive mode-2
   command: "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
-  when: not kubernetes_init_stat.stat.exists
-
+  when: not kubernetes_adminconf.stat.exists
 
 ### 
 ### containerd
@@ -49,7 +49,7 @@
   get_url:
     url: https://download.docker.com/linux/centos/docker-ce.repo
     dest: /etc/yum.repos.d/docer-ce.repo
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
  
 - name: Install containered Prerequisite packages
   package:
@@ -57,13 +57,13 @@
     state: latest
   with_items:
   - yum-utils
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: install containered
   yum:
     name: containerd.io
     state: latest
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Check if containerd_conf
   stat:
@@ -84,7 +84,7 @@
   loop:
     - br_netfilter
     - overlay
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Check if kubernetes-cri.conf
   stat:
@@ -100,18 +100,18 @@
 
 - name: Copy the kubernetes-cri.conf
   shell: sysctl --system
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Create a /etc/containerd directory if it does not exist
   ansible.builtin.file:
     path: /etc/containerd
     state: directory
     mode: '0755'
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: create default config.toml
   shell: containerd config default | tee /etc/containerd/config.toml
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: start containerd and enabled
   ansible.builtin.service:
@@ -136,7 +136,7 @@
     - kubelet
     - kubeadm
     - kubectl
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Add Kubernetes GPG keys.
   rpm_key:
@@ -144,13 +144,13 @@
     state: present
   register: kubernetes_rpm_key
   with_items: "{{ kubernetes_yum_gpg_key }}"
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: Make cache if Kubernetes GPG key changed.
   command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
   when: 
     - kubernetes_rpm_key is changed
-    - kubernetes_init_stat.stat.exists
+    - kubernetes_adminconf.stat.exists
   args:
     warn: false
 
@@ -163,7 +163,7 @@
   - kubelet
   - kubeadm
   - kubectl
-  when: not kubernetes_init_stat.stat.exists
+  when: not kubernetes_adminconf.stat.exists
 
 - name: start containerd and enabled
   ansible.builtin.service:
@@ -183,7 +183,7 @@
     regexp: '\$KUBELET_EXTRA_ARGS'
     replace: '$KUBELET_EXTRA_ARGS --node-ip {{ ansible_host }}' 
   when: 
-    - not kubernetes_init_stat.stat.exists
+    - not kubernetes_adminconf.stat.exists
     - grep_output.stdout == ""
 
 ### 
@@ -197,16 +197,44 @@
     mode: 0755
 
 ### 
-### join kubernetes cluster
+### install kubernetes, calico
 ###
 
-- name: Copy the join command to server location
-  copy: 
-    src: join-command
-    dest: /home/vagrant/join-command.sh
-    mode: 0755
-  when: not kubernetes_init_stat.stat.exists
+- name: Initialize the Kubernetes cluster using kubeadm
+  command: > 
+    kubeadm init 
+    --apiserver-advertise-address="{{ ansible_host }}" 
+    --node-name="{{ node_name }}" 
+    --pod-network-cidr="{{ pod_cidr }}"
+  register: kubeadmin_init
+  when: not kubernetes_adminconf.stat.exists
 
-- name: Join the node to cluster
-  command: sh /home/vagrant/join-command.sh
-  when: not kubernetes_init_stat.stat.exists
+- name: Print the init output to screen.
+  debug:
+    var: kubeadmin_init.stdout
+    verbosity: 2
+  when: not kubernetes_adminconf.stat.exists
+
+- name: copy kubeconfig
+  command: "{{ item }}"
+  with_items:
+  - mkdir -p "{{ kubeconfig_location }}"
+  - cp -i /etc/kubernetes/admin.conf "{{ kubeconfig_location }}/config"
+  - chown "{{kubeconfig_chown}}":"{{kubeconfig_chown}}" "{{ kubeconfig_location }}/config"
+  when: not kubernetes_adminconf.stat.exists
+
+# default calico cidr: 192.168.0.0/16
+- name: Install calico pod network
+  retries: 20
+  delay: 20
+  command: kubectl apply -f "{{ calico_url }}"
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Generate join command
+  command: kubeadm token create --print-join-command
+  register: join_command
+  when: not kubernetes_adminconf.stat.exists
+
+- name: Copy join command to local file
+  local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="{{join_command_location}}"
+  when: not kubernetes_adminconf.stat.exists
