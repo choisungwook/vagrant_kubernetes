@@ -16,7 +16,7 @@ calico_url: "https://docs.projectcalico.org/manifests/calico.yaml"
 # pod cidr
 pod_cidr: "172.16.0.0/16"
 
-# node_ip
+# cluseter_name
 node_name: "control-plane-1"
 
 # kubeconfig copy location

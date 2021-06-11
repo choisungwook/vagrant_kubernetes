@@ -5,13 +5,3 @@ kubernetes_yum_base_url: "https://packages.cloud.google.com/yum/repos/kubernetes
 kubernetes_yum_gpg_key:
 - https://packages.cloud.google.com/yum/doc/yum-key.gpg
 - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-
-# k8s CNI
-# sepcific version
-# calico_url: "https://docs.projectcalico.org/v3.9/manifests/calico.yaml"
-
-# latset version
-calico_url: "https://docs.projectcalico.org/manifests/calico.yaml"
-
-# join command to file location
-# join_command_location: "/home/vagrant/ansible_workspace/roles/k8s_worker/worker/files/join-command"
