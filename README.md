@@ -12,6 +12,7 @@
 
 # 1. 개요
 * vagrant와 ansible을 이용하여 쿠버네티스 자동 설치
+> pdf문서: https://www.slideshare.net/sungwookchoi5/cbhoilab-vagrant-ansible-v2
 
 ![](imgs/infra.png)
 
@@ -46,6 +47,8 @@
 # kubectl get po -A ; 모든 pod running상태 확인
 # helm ; helm 설치 확인
 ```
+
+<br>
 
 # 5. 일시정지와 실행
 > 이 메뉴얼은 vagrant로 production환경을 사용할 경우 부적절합니다.
