@@ -56,6 +56,8 @@
 ![](imgs/start.png)
 
 
+<br>
+
 # 6. 삭제
 > virtualbox를 수동으로 제어한 경우 삭제 명령어 제대로 동작하지 않습니다. 수동으로 제어한 경우 destroy 명령어 실행 후 virtualbox폴더(C:\Users\VirtualBox VMs)에 가서 삭제하고자 하는 vm폴더를 수동삭제해야 합니다.
 ```sh
@@ -65,7 +67,4 @@ vagrant destroy --force
 <br>
 
 # 7. 참고자료
-* [1] dashboard 설치 영상: https://youtu.be/6MnsSvChl1E
-* [2] install k8s playbooks role: https://github.com/geerlingguy/ansible-role-kubernetes/blob/master/tasks/main.yml
-* [3] dashboard 공식문서: https://kubernetes.io/ko/docs/tasks/access-application-cluster/web-ui-dashboard/
-* [4] dashboard 공식git: https://github.com/kubernetes/dashboard
+* [1] install k8s playbooks role: https://github.com/geerlingguy/ansible-role-kubernetes/blob/master/tasks/main.yml
